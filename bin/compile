@@ -252,6 +252,9 @@ LIBLEPT_HEADERSDIR=\"$BUILD_DIR/include/leptonica\"" > configure
         #change the permissions on configure to make it executable again
         chmod 755 configure
 
+		echo "Running autogen.sh"
+		./autogen.sh
+
         echo "Configuring Tesseract"
         ./configure --prefix=$TESSERACT_DIR --disable-tessdata-prefix
 
