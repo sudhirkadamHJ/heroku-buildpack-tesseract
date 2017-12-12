@@ -136,15 +136,19 @@ then
 
         cd "$SRC_DIR/libpng-$LIBPNG_VERSION"
 
+		#fPIC flag for shared object error ('.rodata' can not be used when making a shared object)
+		export CC=”gcc -fPIC”
+		export CXX=”g++ -fPIC”
+
         echo "Copying libz header files to libpng"
         cp $BUILD_DIR/include/zlib.h .
         cp $BUILD_DIR/include/zconf.h .
 
         echo "Configuring Lib PNG for Standalone"
-        ./configure --prefix=$BUILD_DIR LDFLAGS="-L$BUILD_DIR/lib -lz"
+        ./configure --prefix=$BUILD_DIR
 
         echo "Building LIBPNG and deploying to $BUILD_DIR"
-        make check --enable-shared
+        make check
         make install
 
         #Check if the build was successful
