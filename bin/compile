@@ -247,8 +247,10 @@ then
         echo "Putting some magic sauce in the configure script"
         echo "CXXFLAGS=\"-I$BUILD_DIR/include -I$BUILD_DIR/include/libpng16 -I$BUILD_DIR/include/leptonica -lpng -ljpeg -lz\"
 LDFLAGS=\"-L$BUILD_DIR/lib\"
-LIBLEPT_HEADERSDIR=\"$BUILD_DIR/include/leptonica\"" > configure
+LIBLEPT_HEADERSDIR=\"$BUILD_DIR/include/leptonica\"
+LD_LIBRARY_PATH=\"$BUILD_DIR/include:$BUILD_DIR/lib:/usr/local/lib\"" > configure
 
+		LD_LIBRARY_PATH=$BUILD_DIR/include:$BUILD_DIR/lib:/usr/local/lib
         #change the permissions on configure to make it executable again
         chmod 755 configure
 
