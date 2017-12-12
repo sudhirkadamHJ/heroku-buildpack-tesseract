@@ -256,7 +256,7 @@ LIBLEPT_HEADERSDIR=\"$BUILD_DIR/include/leptonica\"" > configure
 		./autogen.sh
 
         echo "Configuring Tesseract"
-        ./configure --prefix=$TESSERACT_DIR --disable-tessdata-prefix
+        ./configure --prefix=$TESSERACT_DIR --with-extra-libraries=$BUILD_DIR/include --disable-tessdata-prefix
 
         echo "Configuration Configuration done, now Building"
         make install
