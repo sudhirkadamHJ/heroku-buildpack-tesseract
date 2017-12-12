@@ -141,7 +141,7 @@ then
         cp $BUILD_DIR/include/zconf.h .
 
         echo "Configuring Lib PNG for Standalone"
-        ./configure --prefix=$BUILD_DIR LDFLAGS="-L$BUILD_DIR/lib -lz"
+        ./configure --prefix=$BUILD_DIR LDFLAGS="-L$BUILD_DIR/lib -lz -fPIC"
 
         echo "Building LIBPNG and deploying to $BUILD_DIR"
         make check
