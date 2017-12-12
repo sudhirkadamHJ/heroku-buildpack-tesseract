@@ -232,8 +232,8 @@ then
         fi
 
         if [ ! -f "$ARCHIVE_DIR/tesseract-ocr-$TESSERACT_VERSION.tar.gz" ]; then
-                #Copy the file
-                cp  $ARCHIVE_DIR/tesseract-ocr-$TESSERACT_VERSION.tar.gz https://github.com/tesseract-ocr/tesseract/archive/$TESSERACT_VERSION.tar.gz
+                #Download the file
+                curl -L -o  $ARCHIVE_DIR/tesseract-ocr-$TESSERACT_VERSION.tar.gz https://github.com/tesseract-ocr/tesseract/archive/$TESSERACT_VERSION.tar.gz
         fi
 
         echo "Extracting archive"
