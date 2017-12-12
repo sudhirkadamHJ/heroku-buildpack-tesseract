@@ -244,15 +244,10 @@ then
         cp -r $BUILD_DIR/bin src
         cp -r $BUILD_DIR/lib src
 
-        mv configure configure_old
-
         echo "Putting some magic sauce in the configure script"
         echo "CXXFLAGS=\"-I$BUILD_DIR/include -I$BUILD_DIR/include/libpng16 -I$BUILD_DIR/include/leptonica -lpng -ljpeg -lz\"
 LDFLAGS=\"-L$BUILD_DIR/lib\"
 LIBLEPT_HEADERSDIR=\"$BUILD_DIR/include/leptonica\"" > configure
-
-        cat configure_old >> configure
-        rm configure_old
 
         #change the permissions on configure to make it executable again
         chmod 755 configure
