@@ -137,8 +137,8 @@ then
         cd "$SRC_DIR/libpng-$LIBPNG_VERSION"
 
 		#fPIC flag for shared object error ('.rodata' can not be used when making a shared object)
-		export CC=”gcc -fPIC”
-		export CXX=”g++ -fPIC”
+		export CC="gcc -fPIC"
+		export CXX="g++ -fPIC"
 
         echo "Copying libz header files to libpng"
         cp $BUILD_DIR/include/zlib.h .
