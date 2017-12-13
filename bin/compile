@@ -168,6 +168,7 @@ if [ $BUILD_LEPTONICA = 1 ]
 then
         echo "Building Leptonica"
         setupDirs
+
         # Clean up old files
         rm -rf $SRC_DIR/leptonica* $BUILD_DIR/leptonica*
 
@@ -243,20 +244,26 @@ then
         cp -r $BUILD_DIR/bin src
         cp -r $BUILD_DIR/lib src
 
-        echo "Putting some magic sauce in the configure script"
-        echo "CFLAGS=\"-I$BUILD_DIR/include -I$BUILD_DIR/include/libpng16 -I$BUILD_DIR/include/leptonica -lpng -ljpeg -lz\"
-LDFLAGS=\"-L$BUILD_DIR/lib\"
-LIBLEPT_HEADERSDIR=\"$BUILD_DIR/include/leptonica\"
-LD_LIBRARY_PATH=\"$BUILD_DIR/include:$BUILD_DIR/lib:/usr/local/lib\"" > configure
+# 		mv configure configure_old
+
+#         echo "Putting some magic sauce in the configure script"
+#         echo "CFLAGS=\"-I$BUILD_DIR/include -I$BUILD_DIR/include/libpng16 -I$BUILD_DIR/include/leptonica -lpng -ljpeg -lz\"
+# LDFLAGS=\"-L$BUILD_DIR/lib\"
+# LIBLEPT_HEADERSDIR=\"$BUILD_DIR/include/leptonica\"
+# LD_LIBRARY_PATH=\"$BUILD_DIR/include:$BUILD_DIR/lib:/usr/local/lib\"" > configure
+
+		# cat configure_old >> configure
+
+        # rm configure_old
 
         #change the permissions on configure to make it executable again
-        chmod 755 configure
+        # chmod 755 configure
 
 		echo "Running autogen.sh"
 		./autogen.sh
 
         echo "Configuring Tesseract"
-        ./configure --prefix=$TESSERACT_DIR --enable-debug --disable-tessdata-prefix
+        ./configure --prefix=$TESSERACT_DIR --disable-tessdata-prefix
 
         echo "Configuration Configuration done, now Building"
         make install
