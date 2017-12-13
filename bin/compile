@@ -168,7 +168,6 @@ if [ $BUILD_LEPTONICA = 1 ]
 then
         echo "Building Leptonica"
         setupDirs
-
         # Clean up old files
         rm -rf $SRC_DIR/leptonica* $BUILD_DIR/leptonica*
 
