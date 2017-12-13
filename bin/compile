@@ -182,36 +182,60 @@ then
 
         cd "$SRC_DIR/leptonica-$LEPTONICA_VERSION"
         
-        echo "Configuring leptonica for standalone"
-        ./make-for-local
+        # echo "Configuring leptonica for standalone"
+        # ./make-for-local
 
-        echo "Modifying environ.h"
-        cat src/environ.h |sed -e 's/#define  HAVE_LIBTIFF     1/#define  HAVE_LIBTIFF     0/g' > src/environ.test.h
-        mv src/environ.test.h src/environ.h
+        # echo "Modifying environ.h"
+        # cat src/environ.h |sed -e 's/#define  HAVE_LIBTIFF     1/#define  HAVE_LIBTIFF     0/g' > src/environ.test.h
+        # mv src/environ.test.h src/environ.h
 
-        echo "Copying dependencies to leptonica"
-        cp -r $BUILD_DIR/include src
-        cd src
+        # echo "Copying dependencies to leptonica"
+        # cp -r $BUILD_DIR/include src
+        # cd src
 
-        echo "Building LEPTONICA and deploying to $BUILD_DIR"
-        make EXTRAINCLUDES="-I./include -I./include/libpng16"
+        # echo "Building LEPTONICA and deploying to $BUILD_DIR"
+        # make EXTRAINCLUDES="-I./include -I./include/libpng16"
 
-        #Check if the build was successful
-        if [ -f "$SRC_DIR/leptonica-$LEPTONICA_VERSION/lib/nodebug/liblept.a" ]; then 
-                echo "Leptonica Build Successful"
+        # #Check if the build was successful
+        # if [ -f "$SRC_DIR/leptonica-$LEPTONICA_VERSION/lib/nodebug/liblept.a" ]; then 
+        #         echo "Leptonica Build Successful"
+        # else
+        #         echo "LEPTONICA build failed. Exiting."
+        #         exit 1
+        # fi
+
+		echo "Configuring leptonica for standalone"
+        ./configure --disable-shared LDFLAGS="-L$BUILD_DIR/lib" CPPFLAGS="-I$BUILD_DIR/include"
+
+		echo "Building LEPTONICA and deploying to "
+        echo "$BUILD_DIR"
+        make
+		
+		#Check if the build was successful
+        if [ -f $SRC_DIR/leptonica-$LEPTONICA_VERSION/src/.libs/liblept.a ]; then 
+                echo "*** Leptonica Build Successful ***"
         else
                 echo "LEPTONICA build failed. Exiting."
                 exit 1
         fi
 
-        echo "Copying files for Tesseract"
-        cp $SRC_DIR/leptonica-$LEPTONICA_VERSION/lib/nodebug/liblept.a $BUILD_DIR/lib
+		echo "Copying files for Tesseract"
+        cp $SRC_DIR/leptonica-$LEPTONICA_VERSION/src/.libs/liblept.a $BUILD_DIR/lib
 
-        if [ ! -f "$BUILD_DIR/include/leptonica" ]; then
+        if [ ! -f $BUILD_DIR/include/leptonica ]; then
                 mkdir $BUILD_DIR/include/leptonica
         fi
 
-        cp $SRC_DIR/leptonica-$LEPTONICA_VERSION/src/*.h $BUILD_DIR/include/leptonica
+        # cp $SRC_DIR/leptonica-$LEPTONICA_VERSION/src/*.h $BUILD_DIR/include/leptonica
+
+        # echo "Copying files for Tesseract"
+        # cp $SRC_DIR/leptonica-$LEPTONICA_VERSION/lib/nodebug/liblept.a $BUILD_DIR/lib
+
+        # if [ ! -f "$BUILD_DIR/include/leptonica" ]; then
+        #         mkdir $BUILD_DIR/include/leptonica
+        # fi
+
+        # cp $SRC_DIR/leptonica-$LEPTONICA_VERSION/src/*.h $BUILD_DIR/include/leptonica
 
 else
         echo "Skipping Leptonica"
@@ -244,26 +268,31 @@ then
         cp -r $BUILD_DIR/bin src
         cp -r $BUILD_DIR/lib src
 
-		mv configure configure_old
+# 		mv configure configure_old
 
-        echo "Putting some magic sauce in the configure script"
-        echo "CFLAGS=\"-I$BUILD_DIR/include -I$BUILD_DIR/include/libpng16 -I$BUILD_DIR/include/leptonica -lpng -ljpeg -lz\"
-LDFLAGS=\"-L$BUILD_DIR/lib\"
-LIBLEPT_HEADERSDIR=\"$BUILD_DIR/include/leptonica\"
-LD_LIBRARY_PATH=\"$BUILD_DIR/include:$BUILD_DIR/lib:/usr/local/lib\"" > configure
+#         echo "Putting some magic sauce in the configure script"
+#         echo "CFLAGS=\"-I$BUILD_DIR/include -I$BUILD_DIR/include/libpng16 -I$BUILD_DIR/include/leptonica -lpng -ljpeg -lz\"
+# LDFLAGS=\"-L$BUILD_DIR/lib\"
+# LIBLEPT_HEADERSDIR=\"$BUILD_DIR/include/leptonica\"
+# LD_LIBRARY_PATH=\"$BUILD_DIR/include:$BUILD_DIR/lib:/usr/local/lib\"" > configure
 
-		cat configure_old >> configure
+# 		cat configure_old >> configure
 
-        rm configure_old
+#         rm configure_old
 
-        #change the permissions on configure to make it executable again
-        chmod 755 configure
+#         #change the permissions on configure to make it executable again
+#         chmod 755 configure
+
+		export CXXFLAGS="-I$BUILD_DIR/include -I$BUILD_DIR/include/libpng16 -I$BUILD_DIR/include/leptonica -lpng -ljpeg -lz"
+        export CPPFLAGS="-I$BUILD_DIR/include -I$BUILD_DIR/include/libpng16 -I$BUILD_DIR/include/leptonica -lpng -ljpeg -lz"
+        export LDFLAGS="-L$BUILD_DIR/lib"
+        export LIBLEPT_HEADERSDIR=$BUILD_DIR/include/leptonica
 
 		echo "Running autogen.sh"
 		./autogen.sh
 
         echo "Configuring Tesseract"
-        ./configure --prefix=$TESSERACT_DIR --disable-tessdata-prefix
+        ./configure --prefix=$TESSERACT_DIR --with-extra-libraries=$BUILD_DIR/lib
 
         echo "Configuration Configuration done, now Building"
         make install
@@ -301,6 +330,9 @@ LD_LIBRARY_PATH=\"$BUILD_DIR/include:$BUILD_DIR/lib:/usr/local/lib\"" > configur
 		cp $ARCHIVE_DIR/eq.traineddata -C $TESSERACT_DIR/bin
 
         cd $TESSERACT_DIR/bin
+		
+		export TESSDATA_PREFIX=$TESSERACT_DIR/share
+        export DYLD_LIBRARY_PATH=$TESSERACT_DIR/lib
 
         echo "Tesseract is now built and can be found at: $BUILD_DIR"
 
