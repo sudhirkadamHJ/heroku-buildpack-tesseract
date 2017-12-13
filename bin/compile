@@ -244,20 +244,20 @@ then
         cp -r $BUILD_DIR/bin src
         cp -r $BUILD_DIR/lib src
 
-# 		mv configure configure_old
+		mv configure configure_old
 
-#         echo "Putting some magic sauce in the configure script"
-#         echo "CFLAGS=\"-I$BUILD_DIR/include -I$BUILD_DIR/include/libpng16 -I$BUILD_DIR/include/leptonica -lpng -ljpeg -lz\"
-# LDFLAGS=\"-L$BUILD_DIR/lib\"
-# LIBLEPT_HEADERSDIR=\"$BUILD_DIR/include/leptonica\"
-# LD_LIBRARY_PATH=\"$BUILD_DIR/include:$BUILD_DIR/lib:/usr/local/lib\"" > configure
+        echo "Putting some magic sauce in the configure script"
+        echo "CFLAGS=\"-I$BUILD_DIR/include -I$BUILD_DIR/include/libpng16 -I$BUILD_DIR/include/leptonica -lpng -ljpeg -lz\"
+LDFLAGS=\"-L$BUILD_DIR/lib\"
+LIBLEPT_HEADERSDIR=\"$BUILD_DIR/include/leptonica\"
+LD_LIBRARY_PATH=\"$BUILD_DIR/include:$BUILD_DIR/lib:/usr/local/lib\"" > configure
 
-		# cat configure_old >> configure
+		cat configure_old >> configure
 
-        # rm configure_old
+        rm configure_old
 
         #change the permissions on configure to make it executable again
-        # chmod 755 configure
+        chmod 755 configure
 
 		echo "Running autogen.sh"
 		./autogen.sh
