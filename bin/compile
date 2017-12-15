@@ -216,14 +216,14 @@ then
         cd $SRC_DIR/tiff-$LIBTIFF_VERSION
 
         echo "Configuring Lib Tiff for Standalone"
-        ./configure --prefix=$BUILD_DIR
+        ./configure --prefix=$BUILD_DIR LDFLAGS="-L$BUILD_DIR/lib -lz"
 
         echo "Building LIBTIFF and deploying to "
         echo "    -> $BUILD_DIR"
         make install
 
         #Check if the build was successful
-        if [ -f $BUILD_DIR/include/tifflib.h ]; then 
+        if [ -f $BUILD_DIR/include/tiff.h ]; then 
                 echo "LIB TIFF Build Successful"
         else
                 echo "LIBTIFF build failed. Exiting."
