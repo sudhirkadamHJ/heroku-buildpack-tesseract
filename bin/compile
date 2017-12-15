@@ -27,6 +27,7 @@
 BUILD_LIBJPEG=1
 BUILD_ZLIB=1
 BUILD_LIBPNG=1
+BUILD_LIBTIFF=1
 BUILD_LEPTONICA=1
 BUILD_TESSERACT=1
 
@@ -40,6 +41,7 @@ TESSERACT_DIR="$BASE_DIR"/tesseract
 LIBJPEG_VERSION=9b
 ZLIB_VERSION=1.2.11
 LIBPNG_VERSION=1.6.34
+LIBTIFF_VERSION=9b
 LEPTONICA_VERSION=1.74
 TESSERACT_VERSION=3.05.01
 
@@ -193,7 +195,45 @@ else
         echo "Skipping LIBPNG"
 fi
 
-# FOURTH - Build Leptonica
+
+# FOURTH - Build lib Libtiff
+if [[ "$BUILD_LIBTIFF" = 1 ]]
+then
+        echo
+        echo "Building Lib Tiff"
+
+        # Clean up old files
+        rm -rf $SRC_DIR/tiff* $BUILD_DIR/tiff*
+
+        if [ ! -f $ARCHIVE_DIR/jpegsrc.v$LIBTIFF_VERSION.tar.gz ]; then
+                #Download the file
+                curl -o $ARCHIVE_DIR/tiff-$LIBTIFF_VERSION.tar.gz http://download.osgeo.org/libtiff/tiff-$LIBTIFF_VERSION.tar.gz
+        fi
+
+        echo "Extracting archive"
+        tar -xzf $ARCHIVE_DIR/tiff-$LIBTIFF_VERSION.tar.gz -C $SRC_DIR
+
+        cd $SRC_DIR/tiff-$LIBTIFF_VERSION
+
+        echo "Configuring Lib Tiff for Standalone"
+        ./configure --prefix=$BUILD_DIR
+
+        echo "Building LIBTIFF and deploying to "
+        echo "    -> $BUILD_DIR"
+        make install
+
+        #Check if the build was successful
+        if [ -f $BUILD_DIR/include/tifflib.h ]; then 
+                echo "LIB TIFF Build Successful"
+        else
+                echo "LIBTIFF build failed. Exiting."
+                exit 1
+        fi
+else
+        echo "Skipping LIBTIFF"
+fi
+
+# FIFTH - Build Leptonica
 if [[ $BUILD_LEPTONICA = 1 ]]
 then
         echo
