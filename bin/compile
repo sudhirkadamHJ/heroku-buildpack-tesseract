@@ -252,12 +252,26 @@ then
 
         cd $SRC_DIR/leptonica-$LEPTONICA_VERSION
         
-        echo "Configuring leptonica for standalone"
-        ./configure --prefix=$BUILD_DIR LDFLAGS="-L$BUILD_DIR/lib" CPPFLAGS="-I$BUILD_DIR/include"
+        # echo "Configuring leptonica for standalone"
+        # ./configure --prefix=$BUILD_DIR LDFLAGS="-L$BUILD_DIR/lib" CPPFLAGS="-I$BUILD_DIR/include"
 
-        echo "Building LEPTONICA and deploying to "
-        echo "    -> $BUILD_DIR"
-        make
+        # echo "Building LEPTONICA and deploying to "
+        # echo "    -> $BUILD_DIR"
+        # make
+
+		echo "Configuring leptonica for standalone"
+		./make-for-local
+	
+		echo "Modifying environ.h"
+		cat src/environ.h |sed -e 's/#define  HAVE_LIBTIFF     1/#define  HAVE_LIBTIFF     0/g' > src/environ.test.h
+		mv src/environ.test.h src/environ.h
+	
+		echo "Copying dependencies to leptonica"
+		cp -r $BUILD_DIR/include src
+		cd src
+	
+		echo "Building LEPTONICA and deploying to $BUILD_DIR"
+		make EXTRAINCLUDES="-I./include -I./include/libpng16"
 
         #Check if the build was successful
         if [ -f $SRC_DIR/leptonica-$LEPTONICA_VERSION/src/.libs/liblept.a ]; then 
