@@ -41,7 +41,7 @@ TESSERACT_DIR="$BASE_DIR"/tesseract
 LIBJPEG_VERSION=9b
 ZLIB_VERSION=1.2.11
 LIBPNG_VERSION=1.6.34
-LIBTIFF_VERSION=9b
+LIBTIFF_VERSION=4.0.9
 LEPTONICA_VERSION=1.74
 TESSERACT_VERSION=3.05.01
 
@@ -216,7 +216,7 @@ then
         cd $SRC_DIR/tiff-$LIBTIFF_VERSION
 
         echo "Configuring Lib Tiff for Standalone"
-        ./configure --prefix=$BUILD_DIR LDFLAGS="-L$BUILD_DIR/lib -lz"
+        ./configure --prefix=$BUILD_DIR
 
         echo "Building LIBTIFF and deploying to "
         echo "    -> $BUILD_DIR"
@@ -279,9 +279,9 @@ then
 		echo "Copying lept.pc to pkgconfig"
 		cp $SRC_DIR/leptonica-$LEPTONICA_VERSION/lept.pc $BUILD_DIR/lib/pkgconfig
 
-		echo "Exporting lib leptonica to pkg_config_path"
+		echo "Exporting lib paths to pkg_config_path"
 		export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$BUILD_DIR/lib/pkgconfig:$BUILD_DIR/lib
-
+		
 		# pkg-config --cflags lept
 		# pkg-config --libs lept
 
