@@ -252,26 +252,13 @@ then
 
         cd $SRC_DIR/leptonica-$LEPTONICA_VERSION
         
-        # echo "Configuring leptonica for standalone"
-        # ./configure --prefix=$BUILD_DIR LDFLAGS="-L$BUILD_DIR/lib" CPPFLAGS="-I$BUILD_DIR/include"
+        echo "Configuring leptonica for standalone"
+        ./configure --prefix=$BUILD_DIR LDFLAGS="-L$BUILD_DIR/lib" CPPFLAGS="-I$BUILD_DIR/include"
 
-        # echo "Building LEPTONICA and deploying to "
-        # echo "    -> $BUILD_DIR"
-        # make
-
-		echo "Configuring leptonica for standalone"
-		./make-for-local
-	
-		echo "Modifying environ.h"
-		cat src/environ.h |sed -e 's/#define  HAVE_LIBTIFF     1/#define  HAVE_LIBTIFF     0/g' > src/environ.test.h
-		mv src/environ.test.h src/environ.h
-	
-		echo "Copying dependencies to leptonica"
-		cp -r $BUILD_DIR/include src
-		cd src
-	
-		echo "Building LEPTONICA and deploying to $BUILD_DIR"
+        echo "Building LEPTONICA and deploying to "
+        echo "    -> $BUILD_DIR"
 		make EXTRAINCLUDES="-I./include -I./include/libpng16"
+
 
         #Check if the build was successful
         if [ -f $SRC_DIR/leptonica-$LEPTONICA_VERSION/src/.libs/liblept.a ]; then 
@@ -293,9 +280,9 @@ then
 		echo "Copying lept.pc to pkgconfig"
 		cp $SRC_DIR/leptonica-$LEPTONICA_VERSION/lept.pc $BUILD_DIR/lib/pkgconfig
 
-		echo "Exporting lib paths to pkg_config_path"
+		echo "Exporting lib leptonica to pkg_config_path"
 		export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$BUILD_DIR/lib/pkgconfig:$BUILD_DIR/lib
-		
+
 		# pkg-config --cflags lept
 		# pkg-config --libs lept
 
@@ -335,8 +322,8 @@ then
         echo "Running autogen"
         ./autogen.sh || bail_out
 
-		export CXXFLAGS="-I$BUILD_DIR/include -I$BUILD_DIR/include/libpng16 -I$BUILD_DIR/include/leptonica -lpng -ljpeg -lz"
-        export CPPFLAGS="-I$BUILD_DIR/include -I$BUILD_DIR/include/libpng16 -I$BUILD_DIR/include/leptonica -lpng -ljpeg -lz"
+		export CXXFLAGS="-I$BUILD_DIR/include -I$BUILD_DIR/include/libpng16 -I$BUILD_DIR/include/leptonica -lpng -ljpeg -ltiff -lz"
+        export CPPFLAGS="-I$BUILD_DIR/include -I$BUILD_DIR/include/libpng16 -I$BUILD_DIR/include/leptonica -lpng -ljpeg -ltiff -lz"
         export LDFLAGS="-L$BUILD_DIR/lib"
         export LIBLEPT_HEADERSDIR=$BUILD_DIR/include/leptonica
         
