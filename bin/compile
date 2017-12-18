@@ -42,7 +42,7 @@ LIBJPEG_VERSION=9b
 ZLIB_VERSION=1.2.11
 LIBPNG_VERSION=1.6.34
 LIBTIFF_VERSION=4.0.9
-LEPTONICA_VERSION=1.74
+LEPTONICA_VERSION=1.74.4
 TESSERACT_VERSION=3.05.01
 
 
@@ -247,6 +247,8 @@ then
                 curl -o $ARCHIVE_DIR/leptonica-$LEPTONICA_VERSION.tar.gz http://www.leptonica.com/source/leptonica-$LEPTONICA_VERSION.tar.gz
         fi
 
+		export LD_LIBRARY_PATH="-L$BUILD_DIR/lib"
+
         echo "Extracting archive"
         tar -xzf $ARCHIVE_DIR/leptonica-$LEPTONICA_VERSION.tar.gz -C $SRC_DIR
 
@@ -254,7 +256,7 @@ then
         
         echo "Configuring leptonica for standalone"
         ./configure --prefix=$BUILD_DIR LDFLAGS="-L$BUILD_DIR/lib" CPPFLAGS="-I$BUILD_DIR/include"
-
+		
         echo "Building LEPTONICA and deploying to "
         echo "    -> $BUILD_DIR"
 		make EXTRAINCLUDES="-I./include -I./include/libpng16"
@@ -305,15 +307,16 @@ then
                 rm -rf $TESSERACT_DIR/*
         fi
 
-        if [ ! -f $ARCHIVE_DIR/tesseract-$TESSERACT_VERSION.tar.gz ]; then
-				#Download the file
-               	curl -L -o $ARCHIVE_DIR/tesseract-$TESSERACT_VERSION.tar.gz https://github.com/tesseract-ocr/tesseract/archive/$TESSERACT_VERSION.tar.gz
-       	fi
+        # if [ ! -f $ARCHIVE_DIR/tesseract-$TESSERACT_VERSION.tar.gz ]; then
+		# 		#Download the file
+        #        	curl -L -o $ARCHIVE_DIR/tesseract-$TESSERACT_VERSION.tar.gz https://github.com/tesseract-ocr/tesseract/archive/$TESSERACT_VERSION.tar.gz
+       	# fi
  
        	echo "Extracting archive"
-    	tar -xzf $ARCHIVE_DIR/tesseract-$TESSERACT_VERSION.tar.gz -C $SRC_DIR
+    	# tar -xzf $ARCHIVE_DIR/tesseract-$TESSERACT_VERSION.tar.gz -C $SRC_DIR
+		cp -r $BASE_DIR/../tesseract $SRC_DIR
       
-        cd $SRC_DIR/tesseract-$TESSERACT_VERSION
+        cd $SRC_DIR/tesseract
 
         cp -r $BUILD_DIR/include src
         cp -r $BUILD_DIR/bin src
