@@ -317,11 +317,11 @@ then
         echo "Running autogen"
         ./autogen.sh || bail_out
 
-		export CXXFLAGS="-L$BUILD_DIR/lib -llept -lz -lpng -ljpeg -ltiff -lpthread"
-        export CPPFLAGS="-L$BUILD_DIR/lib -llept -lz -lpng -ljpeg -ltiff -lpthread"
+		export CXXFLAGS="-llept -lz -lpng -ljpeg -ltiff -lpthread"
+        export CPPFLAGS="-llept -lz -lpng -ljpeg -ltiff -lpthread"
         export LDFLAGS="-L$BUILD_DIR/lib"
 		export LIBLEPT_HEADERSDIR=$BUILD_DIR/include/leptonica
-		export LD_LIBRARY_PATH=$BUILD_DIR/lib
+		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BUILD_DIR/lib
         
 		echo "Configuring Tesseract"
         ./configure --prefix=$TESSERACT_DIR || bail_out
