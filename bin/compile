@@ -316,12 +316,12 @@ then
         echo "Running autogen"
         ./autogen.sh || bail_out
 
-        export CFLAGS="-I$BUILD_DIR/include/leptonica -L$BUILD_DIR/build/lib -llept -lz -lpng -ljpeg -ltiff -lpthread"
+        export CFLAGS="-I$BUILD_DIR/include/leptonica -L$BUILD_DIR/build/lib -lz -lpng -ljpeg -ltiff -lpthread"
         export LDFLAGS="-L$BUILD_DIR/lib"
 		export LIBLEPT_HEADERSDIR=$BUILD_DIR/include/leptonica
         
 		echo "Configuring Tesseract"
-        ./configure --prefix=$TESSERACT_DIR || bail_out
+        ./configure --prefix=$TESSERACT_DIR --with-extra-includes=$BUILD_DIR/include --with-extra-libraries=$BUILD_DIR/lib || bail_out
 
         echo "Start Building Tesseract"
         make
