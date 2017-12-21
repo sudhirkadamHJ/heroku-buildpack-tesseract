@@ -316,7 +316,7 @@ then
         echo "Running autogen"
         ./autogen.sh || bail_out
 
-        export CFLAGS="-llept -lz -lpng -ljpeg -ltiff -lpthread"
+        export CFLAGS="-I$BUILD_DIR/include/leptonica -L$BUILD_DIR/build/lib -llept -lz -lpng -ljpeg -ltiff -lpthread"
         export LDFLAGS="-L$BUILD_DIR/lib"
 		export LIBLEPT_HEADERSDIR=$BUILD_DIR/include/leptonica
         
