@@ -281,6 +281,9 @@ then
 		echo "Copying lept.pc to pkgconfig"
 		cp $SRC_DIR/leptonica-$LEPTONICA_VERSION/lept.pc $BUILD_DIR/lib/pkgconfig
 
+		echo "Exporting pkgconfig folder path to pkg_config_path"
+		export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$BUILD_DIR/lib/pkgconfig
+
 else
         echo "Skipping Leptonica"
 fi
