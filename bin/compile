@@ -1,26 +1,368 @@
 #!/bin/bash
-BUILD_DIR=$1
-TESSERACT_OCR_VERSION=3.03
-TESSERACT_OCR_DATA_VERSION=3.02
 
-TESSERACT_OCR_TGZ=tesseract-ocr-$TESSERACT_OCR_VERSION.tar.gz
+#
+# Build Script for making standalone version of Tesseract
+# Sudhir Kadam
 
-INSTALL_DIR=$BUILD_DIR/vendor/tesseract-ocr/
-INSTALL_DIR_TRAINING_DATA=$BUILD_DIR/vendor/
-TESSERACT_OCR_DIR=${HOME}/vendor/tesseract-ocr
-ENVSCRIPT=$BUILD_DIR/.profile.d/tesseract-ocr.sh
+# Originally posted at:https://code.google.com/p/tesseract-ocr/issues/detail?id=1326
+# Original pastebin source: http://pastebin.com/VnGLHfbr
 
-TESSERACT_OCR_LANGUAGES=eng
+# NOTE:
+# you must set 2 environment variables to locate the runnable version of Tesseract:
+#   TESSDATA_PREFIX - set to the parent folder for the tessdata folder
+#   DYLD_LIBRARY_PATH - set to the path up to and including the lib folder
+#
+# the runnable version of Tesseract consists of the folder "tesseract" with the following content (comments in brackets):
+#
+#      bin (folder)
+#            tesseract (the executable itself)
+#      include (folder)
+#            
+#      lib (folder - pointed to by DYLD_LIBRARY_PATH)
+#            
+#      share (folder - pointed to by TESSDATA_PREFIX)
+#            man (folder)
+#            tessdata (folder)
 
-echo "Unpacking Tesseract-OCR binaries"
-mkdir -p $INSTALL_DIR
-tar -zxvf $TESSERACT_OCR_TGZ -C $INSTALL_DIR
+BUILD_LIBJPEG=1
+BUILD_ZLIB=1
+BUILD_LIBPNG=1
+BUILD_LIBTIFF=1
+BUILD_LEPTONICA=1
+BUILD_TESSERACT=1
 
-echo 'Getting Tesseract-OCR training data'
-cp -r eng.traineddata $INSTALL_DIR_TRAINING_DATA
+# Get the base directory of where the script is
+BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+BUILD_DIR="$BASE_DIR"/build
+ARCHIVE_DIR="$BASE_DIR"/archives
+SRC_DIR="$BASE_DIR"/src
+TESSERACT_DIR="$BASE_DIR"/tesseract
 
-echo "Building runtime environment for Tesseract-OCR"
-mkdir -p $BUILD_DIR/.profile.d
-echo "export PATH=\"$TESSERACT_OCR_DIR/bin:\$PATH\"" > $ENVSCRIPT
-echo "export LD_LIBRARY_PATH=\"$TESSERACT_OCR_DIR/lib:\$LD_LIBRARY_PATH\"" >> $ENVSCRIPT
-echo "export TESSDATA_PREFIX=\"$TESSERACT_OCR_DIR/\"" >> $ENVSCRIPT
+LIBJPEG_VERSION=9b
+ZLIB_VERSION=1.2.11
+LIBPNG_VERSION=1.6.27
+LIBTIFF_VERSION=4.0.9
+LEPTONICA_VERSION=1.74.4
+TESSERACT_VERSION=3.05.01
+
+
+bail_out()
+{
+    echo
+    echo "  Something went wrong, HALTING BUILD!" 
+    echo
+    exit 1
+}
+
+echo
+echo
+echo "STARTING BUILD"
+echo 
+
+if [ ! -d "$ARCHIVE_DIR" ]; then
+	mkdir "$ARCHIVE_DIR"
+fi
+
+if [ ! -d "$SRC_DIR" ]; then
+	mkdir "$SRC_DIR"
+fi
+
+if [ ! -d "$BUILD_DIR" ]; then
+	mkdir "$BUILD_DIR"
+fi
+
+echo "Base Build Directory: "
+echo "    -> $BUILD_DIR"
+
+#fPIC flag for shared object error ('.rodata' can not be used when making a shared object)
+export CC="gcc -fPIC"
+export CXX="g++ -fPIC"
+
+# FIRST - Build lib Libjpeg
+if [[ "$BUILD_LIBJPEG" = 1 ]]
+then
+        echo
+        echo "Building Lib Jpeg"
+
+        # Clean up old files
+        rm -rf $SRC_DIR/jpeg* $BUILD_DIR/jpeg*
+
+        if [ ! -f $ARCHIVE_DIR/jpegsrc.v$LIBJPEG_VERSION.tar.gz ]; then
+			#Download the file
+			curl -o $ARCHIVE_DIR/jpeg.v$LIBJPEG_VERSION.tar.gz http://www.ijg.org/files/jpegsrc.v$LIBJPEG_VERSION.tar.gz
+        fi
+
+        echo "Extracting archive"
+        tar -xzf $ARCHIVE_DIR/jpeg.v$LIBJPEG_VERSION.tar.gz -C $SRC_DIR
+
+        cd $SRC_DIR/jpeg-$LIBJPEG_VERSION
+
+        echo "Configuring Lib Jpeg for Standalone"
+        ./configure --prefix=$BUILD_DIR LDFLAGS="-L$BUILD_DIR/lib" CPPFLAGS="-I$BUILD_DIR/include"
+
+        echo "Building LIBJPEG and deploying to "
+        echo "    -> $BUILD_DIR"
+        make install
+
+        #Check if the build was successful
+        if [ -f $BUILD_DIR/include/jpeglib.h ]; then 
+			echo "LIB JPEG Build Successful"
+        else
+			echo "LIBJPEG build failed. Exiting."
+			exit 1
+        fi
+else
+        echo "Skipping LIBJPEG"
+fi
+
+
+# SECOND - Build lib zlib 
+if [[ $BUILD_ZLIB = 1 ]]
+then
+        echo
+        echo "Building ZLIB"
+
+        # Clean up old files
+        rm -rf $SRC_DIR/zlib* $BUILD_DIR/zlib*
+
+        if [ ! -f $ARCHIVE_DIR/zlib-$ZLIB_VERSION.tar.gz ]; then
+			#Download the file
+			curl -o $ARCHIVE_DIR/zlib-$ZLIB_VERSION.tar.gz http://zlib.net/fossils/zlib-$ZLIB_VERSION.tar.gz
+        fi
+
+        echo "Extracting archive"
+        tar -xzf $ARCHIVE_DIR/zlib-$ZLIB_VERSION.tar.gz -C $SRC_DIR
+
+        cd $SRC_DIR/zlib-$ZLIB_VERSION
+
+        echo "Configuring ZLIB for Standalone"
+        ./configure --prefix=$BUILD_DIR
+
+        echo "Building Zlib and deploying to "
+        echo "    -> $BUILD_DIR"
+        make check
+        make install
+
+        #Check if the build was successful
+        if [ -f $BUILD_DIR/include/zlib.h ]; then 
+			echo "ZLIB Build Successful"
+        else
+			echo "ZLIB build failed. Exiting."
+			exit 1
+        fi
+else
+        echo "Skipping ZLib"
+fi
+
+# THIRD - Build Lib PNG
+if [[ $BUILD_LIBPNG = 1 ]]
+then
+      	echo
+        echo "Building Lib PNG"
+
+        # Clean up old files
+        rm -rf $SRC_DIR/libpng* $BUILD_DIR/libpng*
+
+        if [ ! -f "$ARCHIVE_DIR/libpng-$LIBPNG_VERSION.tar.gz" ]; then
+			#Download the file
+			curl -L -o $ARCHIVE_DIR/libpng-$LIBPNG_VERSION.tar.gz http://downloads.sourceforge.net/project/libpng/libpng16/older-releases/$LIBPNG_VERSION/libpng-$LIBPNG_VERSION.tar.gz?use_mirror=excellmedia
+        fi
+
+        echo "Extracting archive"
+        tar -xzf $ARCHIVE_DIR/libpng-$LIBPNG_VERSION.tar.gz -C $SRC_DIR
+
+        cd "$SRC_DIR/libpng-$LIBPNG_VERSION"
+
+		echo "Copying libz header files to libpng"
+        cp $BUILD_DIR/include/zlib.h .
+        cp $BUILD_DIR/include/zconf.h .
+
+        echo "Configuring Lib PNG for Standalone"
+        ./configure --prefix=$BUILD_DIR LDFLAGS="-L$BUILD_DIR/lib" CPPFLAGS="-I$BUILD_DIR/include"
+
+        echo "Building LIBPNG and deploying to $BUILD_DIR"
+        make check
+        make install
+
+        #Check if the build was successful
+        if [ -f "$BUILD_DIR/include/libpng16/png.h" ]; then 
+			echo "LIB PNG Build Successful"
+        else
+			echo "LIBPNG build failed. Exiting."
+			exit 1
+        fi
+
+else
+        echo "Skipping LIBPNG"
+fi
+
+
+# FOURTH - Build lib Libtiff
+if [[ "$BUILD_LIBTIFF" = 1 ]]
+then
+        echo
+        echo "Building Lib Tiff"
+
+        # Clean up old files
+        rm -rf $SRC_DIR/tiff* $BUILD_DIR/tiff*
+
+        if [ ! -f $ARCHIVE_DIR/jpegsrc.v$LIBTIFF_VERSION.tar.gz ]; then
+			#Download the file
+			curl -o $ARCHIVE_DIR/tiff-$LIBTIFF_VERSION.tar.gz http://download.osgeo.org/libtiff/tiff-$LIBTIFF_VERSION.tar.gz
+        fi
+
+        echo "Extracting archive"
+        tar -xzf $ARCHIVE_DIR/tiff-$LIBTIFF_VERSION.tar.gz -C $SRC_DIR
+
+        cd $SRC_DIR/tiff-$LIBTIFF_VERSION
+
+        echo "Configuring Lib Tiff for Standalone"
+        ./configure --prefix=$BUILD_DIR LDFLAGS="-L$BUILD_DIR/lib" CPPFLAGS="-I$BUILD_DIR/include"
+
+        echo "Building LIBTIFF and deploying to "
+        echo "    -> $BUILD_DIR"
+        make install
+
+        #Check if the build was successful
+        if [ -f $BUILD_DIR/include/tiff.h ]; then 
+			echo "LIB TIFF Build Successful"
+        else
+			echo "LIBTIFF build failed. Exiting."
+			exit 1
+        fi
+else
+        echo "Skipping LIBTIFF"
+fi
+
+# FIFTH - Build Leptonica
+if [[ $BUILD_LEPTONICA = 1 ]]
+then
+        echo
+        echo "Building Leptonica"
+
+        # Clean up old files
+        rm -rf $SRC_DIR/leptonica* $BUILD_DIR/leptonica*
+
+        if [ ! -f $ARCHIVE_DIR/leptonica-$LEPTONICA_VERSION.tar.gz ]; then
+			#Download the file
+			curl -o $ARCHIVE_DIR/leptonica-$LEPTONICA_VERSION.tar.gz http://www.leptonica.com/source/leptonica-$LEPTONICA_VERSION.tar.gz
+        fi
+
+        echo "Extracting archive"
+        tar -xzf $ARCHIVE_DIR/leptonica-$LEPTONICA_VERSION.tar.gz -C $SRC_DIR
+
+        cd $SRC_DIR/leptonica-$LEPTONICA_VERSION
+        
+        echo "Configuring leptonica for standalone"
+        ./configure --prefix=$BUILD_DIR LDFLAGS="-L$BUILD_DIR/lib" CPPFLAGS="-lz -lpng -ljpeg -ltiff"
+		
+        echo "Building LEPTONICA and deploying to "
+        echo "    -> $BUILD_DIR"
+		make EXTRAINCLUDES="-I$BUILD_DIR/include"
+
+
+        #Check if the build was successful
+        if [ -f $SRC_DIR/leptonica-$LEPTONICA_VERSION/src/.libs/liblept.a ]; then 
+			echo "Leptonica Build Successful"
+        else
+			echo "LEPTONICA build failed. Exiting."
+			exit 1
+        fi
+
+        echo "Copying files for Tesseract"
+        # cp $SRC_DIR/leptonica-$LEPTONICA_VERSION/src/.libs/liblept.a $BUILD_DIR/lib
+
+        if [ ! -f $BUILD_DIR/include/leptonica ]; then
+			mkdir $BUILD_DIR/include/leptonica
+        fi
+
+        cp $SRC_DIR/leptonica-$LEPTONICA_VERSION/src/*.h $BUILD_DIR/include/leptonica
+
+		echo "Copying lept.pc to pkgconfig"
+		cp $SRC_DIR/leptonica-$LEPTONICA_VERSION/lept.pc $BUILD_DIR/lib/pkgconfig
+
+else
+        echo "Skipping Leptonica"
+fi
+
+# FINALLY - Build Tesseract
+if [[ $BUILD_TESSERACT = 1 ]]
+then
+        echo
+        echo "Building Tesseract"
+        
+        rm -rf $SRC_DIR/tesseract*
+
+        #Create Tesseract Build Directory
+        if [ ! -d $TESSERACT_DIR ]; then
+			mkdir $TESSERACT_DIR
+        else
+			rm -rf $TESSERACT_DIR/*
+        fi
+
+        if [ ! -f $ARCHIVE_DIR/tesseract-$TESSERACT_VERSION.tar.gz ]; then
+			#Download the file
+			curl -L -o $ARCHIVE_DIR/tesseract-$TESSERACT_VERSION.tar.gz https://github.com/tesseract-ocr/tesseract/archive/$TESSERACT_VERSION.tar.gz
+       	fi
+ 
+       	echo "Extracting archive"
+    	tar -xzf $ARCHIVE_DIR/tesseract-$TESSERACT_VERSION.tar.gz -C $SRC_DIR
+		      
+        cd $SRC_DIR/tesseract-$TESSERACT_VERSION
+        
+        echo "Running autogen"
+        ./autogen.sh || bail_out
+
+		export CXXFLAGS="-llept -lz -lpng -ljpeg -ltiff -lpthread"
+        export CPPFLAGS="-llept -lz -lpng -ljpeg -ltiff -lpthread"
+        export LDFLAGS="-L$BUILD_DIR/lib"
+		export LIBLEPT_HEADERSDIR=$BUILD_DIR/include/leptonica
+        
+		echo "Configuring Tesseract"
+        ./configure --prefix=$TESSERACT_DIR || bail_out
+
+        echo "Start Building Tesseract"
+        make
+
+        ls $TESSERACT_DIR/bin
+
+        if [ -x $TESSERACT_DIR/bin/tesseract ]; then
+			echo "Tesseract Build Successful"
+        else
+			echo "Tesseract build failed. Exiting."
+			exit 1
+        fi
+
+        echo "Checking the language files"
+        if [ ! -f "$ARCHIVE_DIR/eng.traineddata" ]; then
+			#Download the file
+			curl -L -o $ARCHIVE_DIR/eng.traineddata https://github.com/tesseract-ocr/tessdata/raw/3.04.00/eng.traineddata
+        fi
+
+        echo "Checking OSD (Optical Script Detection) models"
+        if [ ! -f "$ARCHIVE_DIR/osd.traineddata" ]; then
+			#Download the file
+			curl -L -o $ARCHIVE_DIR/osd.traineddata https://github.com/tesseract-ocr/tessdata/raw/3.04.00/osd.traineddata
+        fi
+
+		echo "Checking MD (Math / equation detection) models"
+		if [ ! -f "$ARCHIVE_DIR/eq.traineddata" ]; then
+			#Download the file
+			curl -L -o $ARCHIVE_DIR/eq.traineddata https://github.com/tesseract-ocr/tessdata/raw/3.04.00/equ.traineddata
+        fi
+
+        echo "Installing Languages, OSD and MD"
+        cp $ARCHIVE_DIR/eng.traineddata -C $TESSERACT_DIR/bin
+        cp $ARCHIVE_DIR/osd.traineddata -C $TESSERACT_DIR/bin
+		cp $ARCHIVE_DIR/eq.traineddata -C $TESSERACT_DIR/bin
+
+        cd $TESSERACT_DIR/bin
+		
+		export TESSDATA_PREFIX=$TESSERACT_DIR/share
+        export DYLD_LIBRARY_PATH=$TESSERACT_DIR/lib
+
+        echo "Tesseract is now built and can be found at: $BUILD_DIR"
+
+else
+        echo "Skipping Tesseract"
+fi
