@@ -98,7 +98,7 @@ then
         cd $SRC_DIR/jpeg-$LIBJPEG_VERSION
 
         echo "Configuring Lib Jpeg for Standalone"
-        ./configure --prefix=$BUILD_DIR LDFLAGS="-L$BUILD_DIR/lib" CPPFLAGS="-I$BUILD_DIR/include"
+        ./configure --prefix=$BUILD_DIR LDFLAGS="-L$BUILD_DIR/lib" CFLAGS="-I$BUILD_DIR/include"
 
         echo "Building LIBJPEG and deploying to "
         echo "    -> $BUILD_DIR"
@@ -178,7 +178,7 @@ then
         cp $BUILD_DIR/include/zconf.h .
 
         echo "Configuring Lib PNG for Standalone"
-        ./configure --prefix=$BUILD_DIR LDFLAGS="-L$BUILD_DIR/lib" CPPFLAGS="-I$BUILD_DIR/include"
+        ./configure --prefix=$BUILD_DIR LDFLAGS="-L$BUILD_DIR/lib" CFLAGS="-I$BUILD_DIR/include"
 
         echo "Building LIBPNG and deploying to $BUILD_DIR"
         make check
@@ -217,7 +217,7 @@ then
         cd $SRC_DIR/tiff-$LIBTIFF_VERSION
 
         echo "Configuring Lib Tiff for Standalone"
-        ./configure --prefix=$BUILD_DIR LDFLAGS="-L$BUILD_DIR/lib" CPPFLAGS="-I$BUILD_DIR/include"
+        ./configure --prefix=$BUILD_DIR LDFLAGS="-L$BUILD_DIR/lib" CFLAGS="-I$BUILD_DIR/include"
 
         echo "Building LIBTIFF and deploying to "
         echo "    -> $BUILD_DIR"
@@ -233,6 +233,9 @@ then
 else
         echo "Skipping LIBTIFF"
 fi
+
+echo "Exporting pkgconfig folder path to pkg_config_path"
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$BUILD_DIR/lib/pkgconfig
 
 # FIFTH - Build Leptonica
 if [[ $BUILD_LEPTONICA = 1 ]]
@@ -254,7 +257,7 @@ then
         cd $SRC_DIR/leptonica-$LEPTONICA_VERSION
         
         echo "Configuring leptonica for standalone"
-        ./configure --prefix=$BUILD_DIR LDFLAGS="-L$BUILD_DIR/lib" CPPFLAGS="-lz -lpng -ljpeg -ltiff"
+        ./configure --prefix=$BUILD_DIR LDFLAGS="-L$BUILD_DIR/lib" CFLAGS="-lz -lpng -ljpeg -ltiff"
 		
         echo "Building LEPTONICA and deploying to "
         echo "    -> $BUILD_DIR"
@@ -280,9 +283,6 @@ then
 
 		echo "Copying lept.pc to pkgconfig"
 		cp $SRC_DIR/leptonica-$LEPTONICA_VERSION/lept.pc $BUILD_DIR/lib/pkgconfig
-
-		echo "Exporting pkgconfig folder path to pkg_config_path"
-		export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$BUILD_DIR/lib/pkgconfig
 
 else
         echo "Skipping Leptonica"
@@ -316,7 +316,6 @@ then
         echo "Running autogen"
         ./autogen.sh || bail_out
 
-		# export CXXFLAGS="-llept -lz -lpng -ljpeg -ltiff -lpthread"
         export CFLAGS="-llept -lz -lpng -ljpeg -ltiff -lpthread"
         export LDFLAGS="-L$BUILD_DIR/lib"
 		export LIBLEPT_HEADERSDIR=$BUILD_DIR/include/leptonica
