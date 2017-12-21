@@ -273,7 +273,7 @@ then
         fi
 
         echo "Copying files for Tesseract"
-        # cp $SRC_DIR/leptonica-$LEPTONICA_VERSION/src/.libs/liblept.a $BUILD_DIR/lib
+        cp $SRC_DIR/leptonica-$LEPTONICA_VERSION/src/.libs/liblept.a $BUILD_DIR/lib
 
         if [ ! -f $BUILD_DIR/include/leptonica ]; then
 			mkdir $BUILD_DIR/include/leptonica
